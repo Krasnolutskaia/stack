@@ -5,6 +5,10 @@
 
 const int DEFAULT_CAP = 8;
 
+const int DUMP_LEN = 3;
+
+const elem_t POISON = 0xBADBABE;
+
 
 ERRORS Stack_ctor(Stack* stk)
 {
@@ -19,6 +23,7 @@ ERRORS Stack_ctor(Stack* stk)
 
     stk->size = 0;
     stk->capacity = DEFAULT_CAP;
+    Stack_set_poison(stk);
     return OK;
 }
 
@@ -26,8 +31,9 @@ ERRORS Stack_ctor(Stack* stk)
 ERRORS Stack_dtor(Stack* stk)
 {
     free(stk->data);
-    stk->capacity = 0;
-    stk->size = 0;
+    stk->capacity = -1;
+    stk->size = -1;
+    printf("Stack dtor happened\n");
     return OK;
 }
 
@@ -43,12 +49,30 @@ ERRORS Stack_realloc(Stack* stk, int new_capacity)
     } 
     memset(stk->data + stk->size - 1, '\0', stk->capacity - stk->size);
     stk->capacity = new_capacity;
+
+    Stack_set_poison(stk);
+    return OK;
+}
+
+
+ERRORS Stack_set_poison(Stack* stk)
+{
+    for (int i = stk->size - 1; i < stk->capacity; i++)
+    {
+        stk->data[i] = POISON;
+    }
     return OK;
 }
 
 
 ERRORS Stack_push(Stack* stk, elem_t value)
 {
+    if (Stack_OK(stk) != OK)
+    {
+        Stack_dump(stk);
+        return Stack_OK(stk);
+    }
+
     if (stk->size == stk->capacity)
     {
         Stack_realloc(stk, stk->capacity * 2);
@@ -61,6 +85,12 @@ ERRORS Stack_push(Stack* stk, elem_t value)
 
 ERRORS Stack_pop(Stack* stk, elem_t* value)
 {
+    if (Stack_OK(stk) != OK)
+    {
+        Stack_dump(stk);
+        return Stack_OK(stk);
+    }
+
     if ((stk->size - 1) * 2 <= stk->capacity && (stk->size - 1) >= DEFAULT_CAP)
     {
         Stack_realloc(stk, stk->capacity / 2);
@@ -68,26 +98,44 @@ ERRORS Stack_pop(Stack* stk, elem_t* value)
 
     stk->size--;
     *value = stk->data[stk->size];
-    stk->data[stk->size] = 0;
+    stk->data[stk->size] = POISON;
     return OK;
 }
 
 
 ERRORS Stack_dump(Stack* stk)
 {
-    printf("Stack [%p]\n", &stk);
+    printf("Stack [0x%p]\n", &stk);
     printf("{\n");
     printf("\tsize = %d\n", stk->size);
     printf("\tcapacity = %d\n", stk->capacity);
-    printf("\tdata [%p]\n", &stk->data);
+    printf("\tdata [0x%p]\n", &stk->data);
     printf("\t{\n");
 
-    for (int i = 0; i < stk->size + 5 && i < stk->capacity; i++)
+    for (int i = 0; i < stk->size + DUMP_LEN && i < stk->capacity; i++)
     {
-        printf("\t\t[%d] = %d\n", i, stk->data[i]);
+        if (stk->data[i] != POISON)
+        {
+            printf("\t\t*[%d] = " elem_f "\n", i, stk->data[i]);
+        }
+        else
+        {
+            printf("\t\t [%d] = 0x%X (POISON)\n", i, stk->data[i]);
+        }
     }
 
     printf("\t}\n");
     printf("}\n");
+    return OK;
+}
+
+
+ERRORS Stack_OK(Stack* stk)
+{
+    if (!stk) return NO_PTR;
+    if (!stk->data) return NO_DATA;
+    if (stk->size > stk->capacity) return WRONG_SIZE;
+    if (stk->size < 0) return NEGATIVE_SIZE;
+    if (stk->capacity < 0) return NEGATIVE_CAPACITY;
     return OK;
 }

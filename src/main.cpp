@@ -12,11 +12,11 @@ int main()
     Stack_push(&stk, 18);
     Stack_dump(&stk);
 
-    int x = 0;
+    elem_t x = 0;
     Stack_pop(&stk, &x);
-    printf("%d\n", x);
+    printf(elem_f "\n", x);
     Stack_pop(&stk, &x);
-    printf("%d\n", x);
+    printf(elem_f "\n", x);
     Stack_dump(&stk);
     Stack_dtor(&stk);
     return 0;
