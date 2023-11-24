@@ -3,26 +3,26 @@
 #include <string.h>
 #include "stack.h"
 
-const int DEFAULT_CAP = 8;
-
 const int DUMP_LEN = 3;
+
+const int MIN_CAP = 4;
 
 const elem_t POISON = 0xBADBABE;
 
 
-ERRORS Stack_ctor(Stack* stk)
+ERRORS Stack_ctor(Stack* stk, int capacity)
 {
-    stk->data = (elem_t *) calloc(DEFAULT_CAP, sizeof(elem_t));
+    stk->data = (elem_t *) calloc(capacity, sizeof(elem_t));
 
-    if (stk->data == NULL)
+    if (!stk->data)
     {
-        printf("no memory\n");
+        printf("Stack_ctor(): no memory\n");
         free(stk->data);
         exit(EXIT_FAILURE);
     }
 
     stk->size = 0;
-    stk->capacity = DEFAULT_CAP;
+    stk->capacity = capacity;
     Stack_set_poison(stk);
     return OK;
 }
@@ -31,8 +31,9 @@ ERRORS Stack_ctor(Stack* stk)
 ERRORS Stack_dtor(Stack* stk)
 {
     free(stk->data);
-    stk->capacity = -1;
-    stk->size = -1;
+    stk->data = NULL;
+    stk->capacity = 0;
+    stk->size = 0;
     printf("Stack dtor happened\n");
     return OK;
 }
@@ -41,9 +42,9 @@ ERRORS Stack_dtor(Stack* stk)
 ERRORS Stack_realloc(Stack* stk, int new_capacity)
 {
     stk->data = (elem_t *) realloc(stk->data, sizeof(elem_t) * new_capacity);
-    if (stk->data == NULL)
+    if (!stk->data)
     {
-        printf("no memory\n");
+        printf("Stack_realloc(): no memory\n");
         free(stk->data);
         exit(EXIT_FAILURE);
     } 
@@ -91,7 +92,7 @@ ERRORS Stack_pop(Stack* stk, elem_t* value)
         return Stack_OK(stk);
     }
 
-    if ((stk->size - 1) * 2 <= stk->capacity && (stk->size - 1) >= DEFAULT_CAP)
+    if ((stk->size - 1) * 2 <= stk->capacity && (stk->size - 1) >= MIN_CAP)
     {
         Stack_realloc(stk, stk->capacity / 2);
     }

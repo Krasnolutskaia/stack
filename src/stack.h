@@ -23,7 +23,7 @@ enum ERRORS
     NEGATIVE_CAPACITY,
 };
 
-ERRORS Stack_ctor(Stack* stk);
+ERRORS Stack_ctor(Stack* stk, int capacity);
 
 ERRORS Stack_dtor(Stack* stk);
 

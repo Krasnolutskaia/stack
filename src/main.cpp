@@ -7,9 +7,12 @@
 int main()
 {
     Stack stk = {};
-    Stack_ctor(&stk);
+    Stack_ctor(&stk, 4);
     Stack_push(&stk, 10);
     Stack_push(&stk, 18);
+    Stack_push(&stk, 5);
+    Stack_push(&stk, 15);
+    Stack_push(&stk, 100);
     Stack_dump(&stk);
 
     elem_t x = 0;
