@@ -41,14 +41,14 @@ ERRORS Stack_dtor(Stack* stk)
 
 ERRORS Stack_realloc(Stack* stk, int new_capacity)
 {
-    stk->data = (elem_t *) realloc(stk->data, sizeof(elem_t) * new_capacity);
-    if (!stk->data)
+    elem_t * temp = (elem_t *) calloc(new_capacity, sizeof(elem_t));
+    if (!temp)
     {
         printf("Stack_realloc(): no memory\n");
-        free(stk->data);
         exit(EXIT_FAILURE);
     } 
-    memset(stk->data + stk->size - 1, '\0', stk->capacity - stk->size);
+    memcpy(temp, stk->data, stk->size * sizeof(elem_t));
+    stk->data = temp;
     stk->capacity = new_capacity;
 
     Stack_set_poison(stk);
@@ -58,7 +58,7 @@ ERRORS Stack_realloc(Stack* stk, int new_capacity)
 
 ERRORS Stack_set_poison(Stack* stk)
 {
-    for (int i = stk->size - 1; i < stk->capacity; i++)
+    for (int i = stk->size; i < stk->capacity; i++)
     {
         stk->data[i] = POISON;
     }
@@ -79,7 +79,8 @@ ERRORS Stack_push(Stack* stk, elem_t value)
         Stack_realloc(stk, stk->capacity * 2);
     }
 
-    stk->data[stk->size++] = value;
+    stk->data[stk->size] = value;
+    stk->size++;
     return OK;
 }
 
